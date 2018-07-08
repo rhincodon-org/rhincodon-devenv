@@ -1,0 +1,28 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/7"
+  config.vm.box_check_update = false
+  config.vm.hostname = "_HOSTNAME"
+  config.vm.network "private_network", ip: "_IPADDRESS", virtualbox__intnet: "_NET_LOCAL" 
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = _MEMORY
+    vb.cpus = _CPUS
+  end
+  config.vm.provision "shell", inline: <<-SHELL
+    yum -y update
+    yum -y install epel-release
+    yum -y install bash-completion
+    yum -y install zip unzip
+    yum -y install wget
+    wget -qO- https://get.docker.com/ | sh
+    systemctl start docker
+    systemctl enable docker
+    sudo curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+    systemctl start firewalld
+    firewall-cmd --add-service=http --zone=public --permanent
+    firewall-cmd --reload
+  SHELL
+end
